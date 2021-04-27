@@ -13,7 +13,7 @@ class Downloader : public QObject{
     QFile *file;
     QEventLoop * loop;
 public:
-    Downloader(QString urlstr, QEventLoop * loop_){
+    Downloader(QString urlstr, QEventLoop * loop_ = nullptr){
         url = urlstr;
         loop = loop_;
         manager = new QNetworkAccessManager(this);
@@ -30,27 +30,28 @@ public:
         {
             qDebug() << "file open error";
             delete file;
-            file = 0;
+            file = nullptr;
             return;
         }else qDebug() << fileName<< " is downloading ...";
 
-        connect(reply,SIGNAL(finished()),this,SLOT(httpFinished()));
-        connect(reply,SIGNAL(readyRead()),this,SLOT(httpReadyRead()));
+        connect(reply,SIGNAL(finished()),this,SLOT(finished()));
+        connect(reply,SIGNAL(readyRead()),this,SLOT(readyRead()));
     }
 
 private slots:
-    void httpReadyRead() {
+    void readyRead() {
         if (file) file->write(reply->readAll());  //如果文件存在，则写入文件
     }
 
-    void httpFinished() {
+    void finished() {
         file->flush();
         file->close();
         reply->deleteLater();
-        reply = 0;
+        reply = nullptr;
         delete file;
-        file = 0;
-        loop->quit();
+        file = nullptr;
+        if(loop != nullptr)
+            loop->quit();
     }
 };
 
